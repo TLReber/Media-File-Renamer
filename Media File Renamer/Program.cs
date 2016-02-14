@@ -75,7 +75,7 @@ namespace Media_File_Renamer
                 {
                     string currentName = tempFiles[i].Name.ToUpper();
                     Match match = Regex.Match(currentName, "S[0-9][0-9]E[0-9][0-9]");
-                    if (match.Success)
+                    if (match.Success && match.Index != 0)
                     {
                         allFiles.Add(tempFiles[i]);
                     }
