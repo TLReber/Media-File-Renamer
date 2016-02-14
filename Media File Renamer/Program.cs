@@ -100,7 +100,7 @@ namespace Media_File_Renamer
                     renamedFiles.Add(file.Name);
                     File.Move(path + file.Name, //Original fully qualified name
                         path + //Path
-                        currentName.Substring(sIndex, 6) //SxxExx section
+                        currentName.Substring(sIndex, 6) //S##E## section
                         + file.Name.Substring(file.Name.Length - 4) //File extension
                     );
 
