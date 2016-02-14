@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace Media_File_Renamer
 {
     class Program
     {
+        //TODO factor out common code (regex in GetAllFiles() + RenameFiles())
+        //TODO add support for file extensions of any length, consider dictionary <string extName, int extLength>
+
         private static readonly string[] FileExtensions = { ".3g2", ".3gp", ".asf", ".avi", ".drc",
             ".flv", ".f4v", ".fvp", ".f4a", ".f4b", ".gif", ".gifv", ".m4v", ".mkv", ".mng",
             ".mov", ".qt", ".mp4", ".m4p", ".mpg", ".mpeg", ".m2v", ".mxf", ".nsv", ".ogv",
@@ -13,6 +17,7 @@ namespace Media_File_Renamer
 
             ".srt"
         };
+
         private static string path;
         private static List<FileInfo> files;
 
@@ -41,18 +46,18 @@ namespace Media_File_Renamer
             if (Console.ReadLine().ToUpper().Equals("Y"))
             {
                 Console.WriteLine("\nRenaming files.");
-                List<FileInfo> renamedFiles = RenameFiles();
+                List<string> renamedFiles = RenameFiles();
 
                 Console.WriteLine("\nRenamed Files:");
                 Console.WriteLine("--------------");
-                foreach (FileInfo file in renamedFiles)
+                for (int i = 0; i < renamedFiles.Count; i += 2)
                 {
-                    Console.WriteLine(file.Name);
+                    Console.WriteLine(renamedFiles[i] + " -> " + renamedFiles[i + 1]);
                 }
             }
-            else
+            else //TODO add support for passing new directory instead of exiting.
             {
-                Console.WriteLine("Exiting application.");
+                Console.WriteLine("\nExiting application.");
             }
 
             Console.ReadLine();
@@ -60,7 +65,7 @@ namespace Media_File_Renamer
 
         private static List<FileInfo> GetAllFiles()
         {
-            List<FileInfo> files = new List<FileInfo>();
+            List<FileInfo> allFiles = new List<FileInfo>();
             DirectoryInfo directoryMangaer = new DirectoryInfo(path);
 
             foreach (string extension in FileExtensions)
@@ -68,48 +73,38 @@ namespace Media_File_Renamer
                 FileInfo[] tempFiles = directoryMangaer.GetFiles("*" + extension);
                 for (int i = 0; i < tempFiles.Length; i++)
                 {
-                    if (tempFiles[0].Name.Length > 10)
+                    string currentName = tempFiles[i].Name.ToUpper();
+                    Match match = Regex.Match(currentName, "S[0-9][0-9]E[0-9][0-9]");
+                    if (match.Success)
                     {
-                        files.Add(tempFiles[i]);
+                        allFiles.Add(tempFiles[i]);
                     }
                 }
             }
 
-            return files;
+            return allFiles;
         }
 
-        private static List<FileInfo> RenameFiles()
+        private static List<string> RenameFiles() //TODO remove magic numbers.
         {
-            List<FileInfo> renamedFiles = new List<FileInfo>();
+            List<string> renamedFiles = new List<string>();
 
             foreach (FileInfo file in files)
             {
                 string currentName = file.Name.ToUpper();
-                int sIndex = currentName.IndexOf('S');
-                bool startFound = false;
-
-                while (!startFound && sIndex <= currentName.Length - 10) //-10 as must be able to go 5 spots forward for **E** and then another 4 for *.(extension) + 1 for bounding
+                Match match = Regex.Match(currentName, "S[0-9][0-9]E[0-9][0-9]");
+                if (match.Success)
                 {
+                    int sIndex = match.Index;
 
-                    if (48 <= (int)currentName[sIndex + 1] && (int)currentName[sIndex + 1] <= 57) //[48, 57] are the ASCII values of decimal digits.
-                    {
-                        if (48 <= (int)currentName[sIndex + 2] && (int)currentName[sIndex + 2] <= 57)
-                            if (currentName[sIndex + 3] == 'E')
-                                if (48 <= (int)currentName[sIndex + 4] && (int)currentName[sIndex + 4] <= 57)
-                                    if (48 <= (int)currentName[sIndex + 5] && (int)currentName[sIndex + 5] <= 57)
-                                        startFound = true;
-                    }
-                    if (!startFound)
-                    {
-                        sIndex++;
-                        sIndex = currentName.IndexOf('S', sIndex);
-                    }
-                }
+                    renamedFiles.Add(file.Name);
+                    File.Move(path + file.Name, //Original fully qualified name
+                        path + //Path
+                        currentName.Substring(sIndex, 6) //SxxExx section
+                        + file.Name.Substring(file.Name.Length - 4) //File extension
+                    );
 
-                if (startFound)
-                {
-                    renamedFiles.Add(file);
-                    File.Move(path + file.Name, path + currentName.Substring(sIndex, 6) + file.Name.Substring(file.Name.Length - 4));
+                    renamedFiles.Add(currentName.Substring(sIndex, 6) + file.Name.Substring(file.Name.Length - 4));
                 }
             }
 
