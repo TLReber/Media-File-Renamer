@@ -5,79 +5,62 @@ using System.Text.RegularExpressions;
 
 namespace Media_File_Renamer
 {
+    class MediaFile
+    {
+        internal string path;
+        internal string extension;
+
+        public MediaFile(string initPath, string initExt)
+        {
+            path = initPath;
+            extension = initExt;
+        }
+    }
+
     class Program
     {
-        //TODO factor out common code (regex in GetAllFiles() + RenameFiles())
-        //TODO add support for file extensions of any length, consider dictionary <string extName, int extLength>
+        //FIELDS
+        private static readonly Dictionary<string, int> ExtensionPairs = new Dictionary<string, int>()
+        {
+            {".3g2", 4}, {".3gp",  4},  {".asf",  4},  {".avi",  4},  {".drc", 4},  {".flv",  4},
+            {".f4v", 4}, {".fvp",  4},  {".f4a",  4},  {".f4b",  4},  {".gif", 4},  {".gifv", 5},
+            {".m4v", 4}, {".mkv",  4},  {".mng",  4},  {".mov",  4},  {".qt",  3},  {".mp4",  4},
+            {".m4p", 4}, {".mpg",  4},  {".mpeg", 5},  {".m2v",  4},  {".mxf", 4},  {".nsv",  4},
+            {".ogv", 4}, {".ogg",  4},  {".rm",   3},  {".rmvb", 5},  {".roq", 4},  {".svi",  4},
+            {".vob", 4}, {".webm", 5},  {".wmv",  4},  {".yuv",  4},
 
-        private static readonly string[] FileExtensions = { ".3g2", ".3gp", ".asf", ".avi", ".drc",
-            ".flv", ".f4v", ".fvp", ".f4a", ".f4b", ".gif", ".gifv", ".m4v", ".mkv", ".mng",
-            ".mov", ".qt", ".mp4", ".m4p", ".mpg", ".mpeg", ".m2v", ".mxf", ".nsv", ".ogv",
-            ".ogg", ".rm", ".rmvb", ".roq", ".svi", ".vob", ".webm", ".wmv", ".yuv",
-
-            ".srt"
+            {".srt", 4}
         };
 
-        private static string path;
-        private static List<FileInfo> files;
+        private static string path; //The directory in which the program operates.
 
-        static void Main(string[] args)
+        private static List<MediaFile> files = new List<MediaFile>(); //The list of filenames and their extensions.
+
+        //METHODS
+        private static void Main(string[] args)
         {
-            Console.WriteLine("Specify the location of the files you would like to rename.");
-            path = Console.ReadLine();
+            path = args[0] + "\\";
 
-            while (!Directory.Exists(path))
-            {
-                Console.WriteLine("Please enter a valid path.");
-                path = Console.ReadLine();
-            }
-
-            if (path[path.Length - 1] != '\\') path = path + "\\";
             files = GetAllFiles();
-
-            Console.WriteLine("\nList of files to be renamed:");
-            Console.WriteLine("----------------------------");
-            foreach (FileInfo mediaFile in files)
-            {
-                Console.WriteLine(mediaFile.Name);
-            }
-
-            Console.WriteLine("\nProceed with renaming? (Y/N)");
-            if (Console.ReadLine().ToUpper().Equals("Y"))
-            {
-                Console.WriteLine("\nRenaming files.");
-                List<string> renamedFiles = RenameFiles();
-
-                Console.WriteLine("\nRenamed Files:");
-                Console.WriteLine("--------------");
-                for (int i = 0; i < renamedFiles.Count; i += 2)
-                {
-                    Console.WriteLine(renamedFiles[i] + " -> " + renamedFiles[i + 1]);
-                }
-            }
-            else //TODO add support for passing new directory instead of exiting.
-            {
-                Console.WriteLine("\nExiting application.");
-            }
-
-            Console.ReadLine();
+            List<string> renamedFiles = RenameFiles();
         }
 
-        private static List<FileInfo> GetAllFiles()
+        private static List<MediaFile> GetAllFiles()
         {
-            List<FileInfo> allFiles = new List<FileInfo>();
+            List<MediaFile> allFiles = new List<MediaFile>();
             DirectoryInfo directoryMangaer = new DirectoryInfo(path);
 
-            foreach (string extension in FileExtensions)
+
+            foreach (string extension in ExtensionPairs.Keys)
             {
                 FileInfo[] tempFiles = directoryMangaer.GetFiles("*" + extension);
-                for (int i = 0; i < tempFiles.Length; i++)
+                foreach (FileInfo file in tempFiles)
                 {
-                    string currentName = tempFiles[i].Name.ToUpper();
-                    Match match = Regex.Match(currentName, "S[0-9][0-9]E[0-9][0-9]");
-                    if (match.Success && match.Index != 0)
+                    string fileName = file.Name;
+                    Match match = Regex.Match(fileName, "[Ss][0-9][0-9][Ee][0-9][0-9]");
+                    if (match.Success && fileName.Length != 6 + ExtensionPairs[extension]) //7: 6 for "S##E##"
                     {
-                        allFiles.Add(tempFiles[i]);
+                        allFiles.Add(new MediaFile(path, extension));
                     }
                 }
             }
@@ -89,22 +72,21 @@ namespace Media_File_Renamer
         {
             List<string> renamedFiles = new List<string>();
 
-            foreach (FileInfo file in files)
+            foreach (string fileName in files.Keys)
             {
-                string currentName = file.Name.ToUpper();
-                Match match = Regex.Match(currentName, "S[0-9][0-9]E[0-9][0-9]");
+                Match match = Regex.Match(fileName, "[Ss][0-9][0-9][Ee][0-9][0-9]");
                 if (match.Success)
                 {
                     int sIndex = match.Index;
 
-                    renamedFiles.Add(file.Name);
-                    File.Move(path + file.Name, //Original fully qualified name
+                    renamedFiles.Add(fileName);
+                    File.Move(path + fileName, //Original full path
                         path + //Path
-                        currentName.Substring(sIndex, 6) //S##E## section
-                        + file.Name.Substring(file.Name.Length - 4) //File extension
+                        fileName.Substring(sIndex, 6).ToUpper() //S##E## section
+                        + files[fileName] //MediaFile extension
                     );
 
-                    renamedFiles.Add(currentName.Substring(sIndex, 6) + file.Name.Substring(file.Name.Length - 4));
+                    renamedFiles.Add(fileName.Substring(sIndex, 6) + files[fileName]);
                 }
             }
 
