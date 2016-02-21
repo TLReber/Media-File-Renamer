@@ -5,18 +5,6 @@ using System.Text.RegularExpressions;
 
 namespace Media_File_Renamer
 {
-    class MediaFile
-    {
-        internal string path;
-        internal string extension;
-
-        public MediaFile(string initPath, string initExt)
-        {
-            path = initPath;
-            extension = initExt;
-        }
-    }
-
     class Program
     {
         //FIELDS
@@ -34,7 +22,7 @@ namespace Media_File_Renamer
 
         private static string path; //The directory in which the program operates.
 
-        private static List<MediaFile> files = new List<MediaFile>(); //The list of filenames and their extensions.
+        private static Dictionary<string, string> files = new Dictionary<string, string>(); //The list of filenames and their extensions.
 
         //METHODS
         private static void Main(string[] args)
@@ -43,11 +31,19 @@ namespace Media_File_Renamer
 
             files = GetAllFiles();
             List<string> renamedFiles = RenameFiles();
+
+            Console.WriteLine("Renamed Files:\n--------------");
+            for (int i = 0; i < renamedFiles.Count; i += 2)
+            {
+                Console.WriteLine("{0} -> {1}", renamedFiles[i], renamedFiles[i + 1]);
+            }
+
+            Console.ReadLine();
         }
 
-        private static List<MediaFile> GetAllFiles()
+        private static Dictionary<string, string> GetAllFiles()
         {
-            List<MediaFile> allFiles = new List<MediaFile>();
+            Dictionary<string, string> allFiles = new Dictionary<string, string>();
             DirectoryInfo directoryMangaer = new DirectoryInfo(path);
 
 
@@ -60,7 +56,7 @@ namespace Media_File_Renamer
                     Match match = Regex.Match(fileName, "[Ss][0-9][0-9][Ee][0-9][0-9]");
                     if (match.Success && fileName.Length != 6 + ExtensionPairs[extension]) //7: 6 for "S##E##"
                     {
-                        allFiles.Add(new MediaFile(path, extension));
+                        allFiles.Add(fileName, extension);
                     }
                 }
             }
