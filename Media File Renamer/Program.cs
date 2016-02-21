@@ -8,16 +8,13 @@ namespace Media_File_Renamer
     class Program
     {
         //FIELDS
-        private static readonly Dictionary<string, int> ExtensionPairs = new Dictionary<string, int>()
+        private static readonly string[] Extensions =
         {
-            {".3g2", 4}, {".3gp",  4},  {".asf",  4},  {".avi",  4},  {".drc", 4},  {".flv",  4},
-            {".f4v", 4}, {".fvp",  4},  {".f4a",  4},  {".f4b",  4},  {".gif", 4},  {".gifv", 5},
-            {".m4v", 4}, {".mkv",  4},  {".mng",  4},  {".mov",  4},  {".qt",  3},  {".mp4",  4},
-            {".m4p", 4}, {".mpg",  4},  {".mpeg", 5},  {".m2v",  4},  {".mxf", 4},  {".nsv",  4},
-            {".ogv", 4}, {".ogg",  4},  {".rm",   3},  {".rmvb", 5},  {".roq", 4},  {".svi",  4},
-            {".vob", 4}, {".webm", 5},  {".wmv",  4},  {".yuv",  4},
+            ".3g2", ".3gp", ".asf", ".avi", ".drc", ".flv", ".f4v", ".fvp", ".f4a", ".f4b", ".gif",
+            ".gifv", ".m4v", ".mkv", ".mng", ".mov", ".qt", ".mp4",".m4p", ".mpg", ".mpeg", ".m2v",
+            ".mxf", ".nsv", ".ogv", ".ogg", ".rm",  ".rmvb", ".roq", ".svi", ".vob", ".webm", ".wmv", ".yuv",
 
-            {".srt", 4}
+            ".srt"
         };
 
         private static string path; //The directory in which the program operates.
@@ -47,14 +44,14 @@ namespace Media_File_Renamer
             DirectoryInfo directoryMangaer = new DirectoryInfo(path);
 
 
-            foreach (string extension in ExtensionPairs.Keys)
+            foreach (string extension in Extensions)
             {
                 FileInfo[] tempFiles = directoryMangaer.GetFiles("*" + extension);
                 foreach (FileInfo file in tempFiles)
                 {
                     string fileName = file.Name;
                     Match match = Regex.Match(fileName, "[Ss][0-9][0-9][Ee][0-9][0-9]");
-                    if (match.Success && fileName.Length != 6 + ExtensionPairs[extension]) //7: 6 for "S##E##"
+                    if (match.Success && fileName.Length != 6 + extension.Length) //6 for "S##E##"
                     {
                         allFiles.Add(fileName, extension);
                     }
