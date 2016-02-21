@@ -8,6 +8,8 @@ namespace Media_File_Renamer
     class Program
     {
         //FIELDS
+        private const int MATCH_LENGTH = 6; //6 for "S##E##"
+
         private static readonly string[] Extensions =
         {
             ".3g2", ".3gp", ".asf", ".avi", ".drc", ".flv", ".f4v", ".fvp", ".f4a", ".f4b", ".gif",
@@ -21,12 +23,13 @@ namespace Media_File_Renamer
 
         private static Dictionary<string, string> files = new Dictionary<string, string>(); //The list of filenames and their extensions.
 
+
         //METHODS
         private static void Main(string[] args)
         {
             path = args[0] + "\\";
 
-            files = GetAllFiles();
+            GetAllFiles();
             List<string> renamedFiles = RenameFiles();
 
             Console.WriteLine("Renamed Files:\n--------------");
@@ -38,12 +41,11 @@ namespace Media_File_Renamer
             Console.ReadLine();
         }
 
-        private static Dictionary<string, string> GetAllFiles()
+        private static void GetAllFiles()
         {
             Dictionary<string, string> allFiles = new Dictionary<string, string>();
             DirectoryInfo directoryMangaer = new DirectoryInfo(path);
-
-
+            
             foreach (string extension in Extensions)
             {
                 FileInfo[] tempFiles = directoryMangaer.GetFiles("*" + extension);
@@ -51,17 +53,17 @@ namespace Media_File_Renamer
                 {
                     string fileName = file.Name;
                     Match match = Regex.Match(fileName, "[Ss][0-9][0-9][Ee][0-9][0-9]");
-                    if (match.Success && fileName.Length != 6 + extension.Length) //6 for "S##E##"
+                    if (match.Success && fileName.Length != MATCH_LENGTH + extension.Length) //Avoid renaming files in correct format.
                     {
                         allFiles.Add(fileName, extension);
                     }
                 }
             }
 
-            return allFiles;
+            files = allFiles;
         }
 
-        private static List<string> RenameFiles() //TODO remove magic numbers.
+        private static List<string> RenameFiles()
         {
             List<string> renamedFiles = new List<string>();
 
@@ -75,11 +77,11 @@ namespace Media_File_Renamer
                     renamedFiles.Add(fileName);
                     File.Move(path + fileName, //Original full path
                         path + //Path
-                        fileName.Substring(sIndex, 6).ToUpper() //S##E## section
+                        fileName.Substring(sIndex, MATCH_LENGTH).ToUpper() //S##E## section
                         + files[fileName] //MediaFile extension
                     );
 
-                    renamedFiles.Add(fileName.Substring(sIndex, 6) + files[fileName]);
+                    renamedFiles.Add(fileName.Substring(sIndex, MATCH_LENGTH) + files[fileName]);
                 }
             }
 
