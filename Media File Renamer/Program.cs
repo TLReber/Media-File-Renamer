@@ -30,14 +30,21 @@ namespace Media_File_Renamer
             path = args[0] + "\\";
 
             GetAllFiles();
-            List<string> renamedFiles = RenameFiles();
-
-            Console.WriteLine("Renamed Files:\n--------------");
-            for (int i = 0; i < renamedFiles.Count; i += 2)
+            if (files.Count() > 0)    
             {
-                Console.WriteLine("{0} -> {1}", renamedFiles[i], renamedFiles[i + 1]);
+                List<string> renamedFiles = RenameFiles();
+    
+                Console.WriteLine("Renamed Files:\n--------------");
+                for (int i = 0; i < renamedFiles.Count; i += 2)
+                {
+                    Console.WriteLine("{0} -> {1}", renamedFiles[i], renamedFiles[i + 1]);
+                }
             }
-
+            else
+            {
+                Console.WriteLine("No files to rename.");
+            }
+            
             Console.ReadLine();
         }
 
