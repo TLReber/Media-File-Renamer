@@ -30,7 +30,7 @@ namespace Media_File_Renamer
             path = args[0] + "\\";
 
             GetAllFiles();
-            if (files.Count() > 0)    
+            if (files.Count > 0)    
             {
                 List<string> renamedFiles = RenameFiles();
     
