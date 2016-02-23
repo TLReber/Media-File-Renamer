@@ -27,13 +27,14 @@ namespace Media_File_Renamer
         //METHODS
         private static void Main(string[] args)
         {
-            path = args[0] + "\\";
+            path = args[0].ToCharArray()[2] == '\"' ? args[0].Substring(0, 2) + "\\" : args[0] + "\\";
 
             GetAllFiles();
-            if (files.Count > 0)    
+
+            if (files.Count > 0)
             {
                 List<string> renamedFiles = RenameFiles();
-    
+
                 Console.WriteLine("Renamed Files:\n--------------");
                 for (int i = 0; i < renamedFiles.Count; i += 2)
                 {
@@ -44,7 +45,7 @@ namespace Media_File_Renamer
             {
                 Console.WriteLine("No files to rename.");
             }
-            
+
             Console.ReadLine();
         }
 
@@ -52,7 +53,7 @@ namespace Media_File_Renamer
         {
             Dictionary<string, string> allFiles = new Dictionary<string, string>();
             DirectoryInfo directoryMangaer = new DirectoryInfo(path);
-            
+
             foreach (string extension in Extensions)
             {
                 FileInfo[] tempFiles = directoryMangaer.GetFiles("*" + extension);
